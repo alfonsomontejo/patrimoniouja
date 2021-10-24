@@ -1,0 +1,114 @@
+<?php
+$escape = $this->plugin('escapeHtml');
+$this->htmlElement('html')->setAttribute('lang', $this->lang());
+$this->headMeta()->setCharset('utf-8');
+$this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1');
+$this->headTitle()->setSeparator(' · ');
+$this->headLink()->prependStylesheet($this->assetUrl('css/iconfonts.css', 'Omeka'));
+$this->headLink()->appendStylesheet($this->assetUrl('css/style.css'));
+$this->headLink()->prependStylesheet('//fonts.googleapis.com/css2?family=Montserrat');
+$this->headLink()->prependStylesheet('//fonts.googleapis.com/css2?family=Libre+Baskerville');
+$this->headScript()->prependFile($this->assetUrl('js/default.min.js'));
+$this->headScript()->prependFile($this->assetUrl('js/global.js', 'Omeka'));
+$this->headScript()->prependFile($this->assetUrl('vendor/jquery/jquery.min.js', 'Omeka'));
+
+$this->trigger('view.layout');
+$title = $this->pageTitle($site->title());
+$userBar = $this->userBar();
+
+$nav = $site->publicNav();
+$container = $nav->getContainer();
+$activePage = $nav->findActive($container);
+$pageClass = null;
+?>
+<?php echo $this->doctype(); ?>
+<?php echo $this->htmlElement('html'); ?>
+    <head>
+        <?php echo $this->headMeta(); ?>
+        <?php echo $this->headTitle(); ?>
+        <?php echo $this->headLink(); ?>
+        <?php echo $this->headStyle(); ?>
+        <?php echo $this->headScript(); ?>
+        <link rel="search" type="application/opensearchdescription+xml" href="https://patrimoniocultural.ujaen.es/opensearch.xml" title="Patrimonio UJA">
+
+    </head>
+
+    <?php echo $pageClass ? $this->htmlElement('body')->appendAttribute('class', $pageClass) : $this->htmlElement('body'); ?>
+        <div class="full"><?php echo $userBar; ?> </div>
+        <header class="full">
+            <div class="site-title identidad-uja"><a id='logo-stack' href="https://www.ujaen.es/" title="Ir a la página de la Universidad"><img src="<?php echo $this->assetUrl('img/sprite_ujaen.png'); ?>" alt="UJA"></a><a class="titulo-patrimonio" title="Volver a la página de inicio del catálogo" href="<?php echo $site->url(); ?>">Patrimonio cultural de la Universidad de Jaén</a></div>
+            <nav class="desktop-nav" aria-label="menu">
+                <?php echo $this->navigation($this->subNav)->menu()->renderMenu($container, ['maxDepth' =>2]); ?>
+            </nav>
+            <a class="menu-access-button" href="#">
+                <span>
+                  
+                    <i class="down-arrow-black"></i>
+                </span>
+            </a>
+            
+        </header>
+       
+        <nav class="access-dropdown-mobile" style="display:none" aria-hidden='true' aria-label='Menu'>
+                <?php echo $this->navigation($this->subNav)->menu()->renderMenu($container, ['maxDepth' =>2]); ?>
+                <ul class="switch-cont">
+                    <li class="mobile-switch-pos"><label class="dark-switch">
+                            <input type="checkbox" aria-labelledby='darkmode-mobile-togglelabel'>
+                            <span class="slider round"></span>
+                            <span id='darkmode-mobile-togglelabel' title="Modo oscuro" class="toggle-label"><i class="fas fa-moon" alt="Modo oscuro"></i></span>
+                        </label>
+                        
+                    </li>
+                </ul>
+        </nav>
+        <section id='splash' class='full'></section>
+        <section id='primary-content' class='full'>
+            <a name='main-content'></a>
+            <main>
+              <div id='content-stack' contentstack>
+                <?php echo $this->content; ?>
+              </div>
+            </main>
+        </section>
+        <section class='full'>
+            <div>
+            <div id='secondary-content' style="display:none"></div>
+            </div>
+        </section>
+        <footer class="full">
+        <footer>
+<div class="uja-footer">
+<div class="uja-footer__datoscontacto">
+  <div class="uja-footer__datos-contacto-inner">
+    <div class="uja-footer__logo-uja"><a href="https://www.ujaen.es/"><img src="/themes/patrimoniouja/asset/img/sprite_ujaen.png" alt="Universidad de Jaén"></a></div>
+    <div class="uja-footer__vcard vcard">
+      <div class="adr">
+        <span class="org">Vicerrectorado de Proyección de la Cultura y Deportes</br></span>
+        <span class="street-address">Campus Las Lagunillas s/n</span>.
+        <span class="postal-code">23071</span> -
+        <span class="locality">Jaén</span>
+      </div>
+      <div class="tel"><span class="type">Teléfono:</span> <span class="value">+34 953 212338</span></div>
+      <div class="email"><a class="link-grey" title="Enviar un correo electrónico a patrimoniocultural@ujaen.es" href="mailto:patrimoniocultural@ujaen.es"><i class="fa fa-envelope"></i>  patrimoniocultural@ujaen.es</a></div>
+    </div>
+  </div>
+</div>
+
+<div class="uja-footer__group-copyright-and-social">
+  <div class="uja-footer__copyright">
+    <nav aria-labelledby="footer-utilities-menu">
+      <ul>
+        <li class="uja-footer__copyright-menu-item"><a class="uja-footer__copyright-menu-link" href="/s/catalogo/page/accesibilidad">Accesibilidad</a></li>
+        <li class="uja-footer__copyright-menu-item"><a class="uja-footer__copyright-menu-link" href="https://www.ujaen.es/aviso-legal">Aviso legal</a></li>
+        <li class="uja-footer__copyright-menu-item"><a class="uja-footer__copyright-menu-link" href="https://www.ujaen.es/politica-de-privacidad">Política de privacidad</a></li>
+        <li class="uja-footer__copyright-menu-item"><a class="uja-footer__copyright-menu-link" href="https://www.ujaen.es/politica-de-cookies">Política de cookies</a></li>
+        <li class="uja-footer__copyright-menu-item"><a class="uja-footer__copyright-menu-link" href="http://administracionelectronica.ujaen.es/node/129">Buzón de quejas y sugerencias</a></li>
+      </ul>
+    </nav>
+</div>
+</div>
+</div>
+</footer>
+        </footer>
+    </body>
+</html>

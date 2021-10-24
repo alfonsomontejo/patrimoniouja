@@ -1,0 +1,132 @@
+<?php
+$autorTerm = 'dcterms:creator';
+$autor = $item->value($autorTerm) instanceof \Omeka\Api\Representation\ValueRepresentation
+    ? $item->value($autorTerm)->valueResource()->displayTitle()
+    : $item->value($autorTerm);
+?>
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$this->headTitle($autor);
+$this->htmlElement('body')->appendAttribute('class', 'item resource show');
+$this->headScript()->appendFile($this->assetUrl('js/galeria.js'));
+$this->headLink()->appendStylesheet($this->assetUrl('css/lightslider.min.css'));
+$this->headLink()->appendStylesheet($this->assetUrl('css/lightgallery.min.css'));
+$this->headScript()->appendFile($this->assetUrl('js/lightslider.min.js'));
+$this->headScript()->appendFile($this->assetUrl('js/lightgallery.min.js'));
+$this->headScript()->appendFile($this->assetUrl('js/lg-zoom.min.js'));
+$this->headScript()->appendFile($this->assetUrl('js/lg-rotate.min.js'));
+$this->headScript()->appendFile($this->assetUrl('js/lg-video.min.js'));
+$this->headScript()->appendFile($this->assetUrl('js/lg-share.min.js'));
+
+$lightMedia = [];
+$otherMedia = [];
+$whitelist = ['image/bmp', 'image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'video/mp4'];
+foreach ($item->media() as $media) {
+    $mediaType = $media->mediaType();
+    $mediaRenderer = $media->renderer();
+    if (in_array($mediaType, $whitelist) || (strpos($mediaRenderer, 'youtube') !== false)) {
+        $lightMedia[] = $media;
+    } else {
+        $otherMedia[] = $media;
+    }
+}
+?>
+
+<div class="contenido-ficha">
+    <div class="ficha-columna-1">
+        <?php if (count($lightMedia) > 0) : ?>
+            <ol id="itemfiles" class="media-list">
+                <?php foreach ($lightMedia as $media) : ?>
+                    <?php $source = ($media->originalUrl()) ? $media->originalUrl() : $media->source(); ?>
+                    <li data-src="<?php echo $source; ?>" data-thumb="<?php echo $escape($media->thumbnailUrl('medium')); ?>" data-download-url="<?php echo $source; ?>" class="media resource" data-tweet-text="<?php echo $site->title(); ?>: «<?php echo $media->displayTitle(); ?>» por <?php echo mb_strimwidth($autor, 0, 120, '[...]'); ?>" title="<?php echo $media->displayTitle(); ?>" alt="<?php echo $media->displayTitle(); ?>">
+                        <?php echo $media->render(); ?>
+                        <div class="titulo-imagen"><?php echo $media->displayTitle(); ?></div>
+                    </li>
+                <?php endforeach; ?>
+            </ol>
+        <?php endif; ?>
+
+
+        <?php if (count($otherMedia) > 0) : ?>
+            <div id="other-media" class="property">
+                <div class="values">
+                    <?php foreach ($otherMedia as $media) : ?>
+                        <div class="value">
+                            <a href="<?php echo $media->originalUrl(); ?>" title="<?php echo $media->displayTitle(); ?>" alt="<?php echo $media->displayTitle(); ?>"><?php echo $this->thumbnail($media, 'large'); ?></a>
+                            <div class="titulo-media"><a href="<?php echo $media->originalUrl(); ?>"><?php echo $media->displayTitle(); ?><?php echo " (formato " . strtoupper($media->extension()) . ")"; ?></a></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
+    </div>
+
+    <div class="ficha-columna-2">
+        <p class="titulo-catalogo-ficha"><?php echo ucfirst($item->resourceTemplate()->label()); ?></p>
+        <div class="titulo-ficha"><?php echo $this->pageTitle($item->displayTitle()); ?></div>
+        <?php
+        $autoria = $item->value('dcterms:creator', ['all' => true]);
+        foreach ($autoria as $value) {
+                echo '<h2 class="autor-ficha">' . $value->asHtml() . '</h2>';
+        }
+        ?>
+        <div class="property">
+            <?php echo $item->displayValues(); ?>
+        </div>
+
+        <!--    MAPA   -->
+
+        <?php
+        $mapping = $this->api()->searchOne('mappings', ['item_id' => $item->id()])->getContent();
+        $markers = $this->api()->search('mapping_markers', ['item_id' => $item->id()])->getContent();
+        ?>
+        <?php if ($markers) : ?>
+            <?php
+            $this->headLink()->appendStylesheet($this->assetUrl('vendor/leaflet/leaflet.css', 'Mapping'));
+            $this->headScript()->appendFile($this->assetUrl('vendor/leaflet/leaflet.js', 'Mapping'));
+            $this->headScript()->appendFile($this->assetUrl('vendor/leaflet.providers/leaflet-providers.js', 'Mapping'));
+            $this->headScript()->appendFile($this->assetUrl('js/mapping-show.js'));
+            $this->headScript()->appendFile($this->assetUrl('js/control.fit-bounds.js', 'Mapping'));
+            ?>
+            <h4 class="etiqueta-fichas"><?php echo "Mapa de ubicación"; ?></h4>
+            <div id="mapping-section" class="section">
+                <div id="mapping-map" style="height:500px;" data-mapping="<?php echo $this->escapeHtml(json_encode($mapping)); ?>"></div>
+            </div>
+            <?php foreach ($markers as $marker) : ?>
+                <?php
+                $item = $marker->item();
+                $media = $marker->media();
+                ?>
+                <div class="mapping-marker-popup-content" style="display:none;" data-marker-id="<?php echo $this->escapeHtml($marker->id()); ?>" data-marker-lat="<?php echo $this->escapeHtml($marker->lat()); ?>" data-marker-lng="<?php echo $this->escapeHtml($marker->lng()); ?>">
+                    <?php if ($marker->label()) : ?>
+                        <p class="marcador-ficha"><?php echo $this->escapeHtml($marker->label()); ?></p>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <!--    FIN DE MAPA   -->
+
+        <?php $itemSets = $item->itemSets(); ?>
+        <?php if (count($itemSets) > 0) : ?>
+            <h4 class="etiqueta-fichas"><?php echo "Conjuntos de los que forma parte"; ?></h4>
+            <?php foreach ($itemSets as $itemSet) : ?>
+                <div class="value"><a href="<?php echo $escape($itemSet->url()); ?>"><?php echo $itemSet->displayTitle(); ?></a></div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <?php
+        $page = $this->params()->fromQuery('page', 1);
+        $property = $this->params()->fromQuery('property');
+        $subjectValues = $item->displaySubjectValues($page, 10, $property);
+        ?>
+        <?php if ($subjectValues) : ?>
+            <div id="item-linked">
+                <h3><?php echo $translate('Elementos relacionados'); ?></h3>
+                <?php echo $subjectValues; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

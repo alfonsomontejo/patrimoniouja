@@ -1,0 +1,95 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$this->htmlElement('body')->appendAttribute('class', 'item resource browse');
+
+$query = $this->params()->fromQuery();
+$itemSetShow = isset($itemSet);
+if ($itemSetShow) :
+    $this->htmlElement('body')->appendAttribute('class', 'item-set');
+    $query['item_set_id'] = $itemSet->id();
+endif;
+$headingTerm = $this->siteSetting('browse_heading_property_term', 'dcterms:title');
+$bodyTerm = $this->siteSetting('browse_body_property_term', 'dcterms:description');
+$sortHeadings = [
+    [
+        'label' => $translate('Title'),
+        'value' => 'dcterms:title'
+    ],
+    [
+        'label' => $translate('Identifier'),
+        'value' => 'dcterms:identifier'
+    ],
+    [
+        'label' => $translate('Class'),
+        'value' => 'resource_class_label'
+    ],
+    [
+        'label' => $translate('Created'),
+        'value' => 'created'
+    ],
+];
+?>
+
+<?php if ($itemSetShow) : ?>
+    <div class="contenido-conjunto">
+        <div class="conjunto-columna-1">
+            <?php echo $this->pageTitle($itemSet->displayTitle(), 1); ?>
+            <?php
+            $autorias = $itemSet->value('dcterms:creator', ['all' => true]);
+            foreach ($autorias as $value) {
+                echo '<h2 class="autor-ficha">' . $value->asHtml() . '</h2>';
+            } ?>
+            <h3 class="tipo-recurso titulo-catalogo-ficha"><?php echo ucfirst($itemSet->resourceTemplate()->label()); ?></h3>
+            <!-- <h4><?php echo $translate('Item set'); ?></h4> -->
+            <div class="metadata">
+                <?php echo $itemSet->displayValues(); ?>
+            </div>
+        </div>
+        <div class="conjunto-columna-2">
+            <div class="item-set-items">
+
+            <?php else : ?>
+                <div class="consultar-catalogo">
+                    <h1>catálogo</h1>
+
+                    <div id="search"><?php echo $this->partial('common/search-form'); ?></div>
+                    <?php echo $this->hyperlink($translate('Búsqueda avanzada'), $this->url('site/resource', ['controller' => 'item', 'action' => 'search'], ['query' => $query], true), ['class' => 'advanced-`search`']); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!$itemSetShow) : ?>
+                <?php echo $this->searchFilters(); ?>
+                <div class="browse-controls">
+                    <?php echo $this->pagination(); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php $this->trigger('view.browse.before'); ?>
+            <ul class="resource-list">
+                <?php
+                foreach ($items as $item) :
+                    $heading = $headingTerm ? $item->value($headingTerm, ['default' => $translate('[Sin título]')]) : $item->displayTitle();
+                    $body = $bodyTerm ? $item->value($bodyTerm) : $item->value('dcterms:date');
+                ?>
+                    <li class="item resource">
+                        <?php echo $item->linkRaw($this->thumbnail($item, 'large')); ?>
+                        <h4><?php echo $item->link($heading); ?></h4>
+                        <div class="description">
+                            <?php
+                            $autorias = $item->value('dcterms:creator', ['all' => true]);
+                            foreach ($autorias as $value) {
+                                echo $value->asHtml();
+                            } ?>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            <?php echo ($itemSetShow) ? '</div>' : ''; ?>
+
+            <?php if ($itemSetShow) : ?>
+                <div class="browse-controls">
+                    <?php echo $this->pagination(); ?>
+                </div>
+                <?php else : ?><?php echo $this->pagination(); ?> <?php endif; ?>
+            </div>
